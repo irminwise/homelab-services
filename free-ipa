@@ -1,0 +1,27 @@
+freeipa:
+        image: freeipa/freeipa-server
+        command:
+            [
+                "--realm=${ROOT_DOMAIN}",
+                "--ds-password=${LDAP_USER_PASSWORD}",
+                "--admin-password=${LDAP_ADMIN_PASSWORD}",
+                "-U",
+            ]
+        hostname: ${FREEIPA_DOMAIN}
+        container_name: freeipa
+        restart: unless-stopped
+        labels:
+            - "traefik.enable=true"
+            - "traefik.http.routers.freeipa.rule=Host(`${FREEIPA_DOMAIN:?Domain for Freeipa must be set!}`)"
+            - "traefik.http.routers.freeipa.entrypoints=secure"
+            - "traefik.http.routers.freeipa.tls.certresolver=le"
+        networks:
+            - proxy
+        volumes:
+            - ${SERVICES_ROOT}/${FREEIPA_ROOT:-freeipa}/db:/data
+            - ${SERVICES_ROOT}/${FREEIPA_ROOT:-freeipa}/logs:/var/logs
+            - /sys/fs/cgroup:/sys/fs/cgroup:ro
+        tmpfs:
+            - /run
+            - /var/cache
+            - /tmp
